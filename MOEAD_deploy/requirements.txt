@@ -1,0 +1,7 @@
+flask
+pymoo
+deap
+yfinance
+numpy
+matplotlib
+plotly

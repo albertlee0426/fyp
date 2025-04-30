@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolio Optimization 3D Plot</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #loader {
+            display: none;
+            margin: 30px auto;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Portfolio Optimization</h1>
+    <button onclick="runOptimization()" style="font-size: 18px; padding: 10px 20px;">Run Optimization</button>
+    <a href="/download_weights" style="font-size: 18px; text-decoration: none; color: blue;" target="_blank">⬇️ Download Portfolio Weights CSV</a>
+    <div id="loader"></div>
+
+    <div id="plot" style="width: 80%; height: 600px; margin: 40px auto;"></div>
+
+    <script>
+    function runOptimization() {
+        document.getElementById('loader').style.display = 'block';
+        fetch('/run', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loader').style.display = 'none';
+
+                const colorScale = data.esg.map(esg => {
+                    if (esg >= 70) return 'green';
+                    if (esg >= 50) return 'yellow';
+                    return 'red';
+                });
+
+                const trace = {
+                    x: data.returns,
+                    y: data.volatility,
+                    z: data.esg,
+                    mode: 'markers',
+                    marker: {
+                        size: 6,
+                        color: colorScale,
+                        opacity: 0.8,
+                    },
+                    type: 'scatter3d'
+                };
+
+                const layout = {
+                    title: '3D Pareto Front',
+                    scene: {
+                        xaxis: { title: 'Expected Return' },
+                        yaxis: { title: 'Volatility' },
+                        zaxis: { title: 'ESG Score' }
+                    },
+                    margin: { l: 0, r: 0, b: 0, t: 40 },
+                    hovermode: 'closest',
+                    transition: {
+                        duration: 500,
+                        easing: 'cubic-in-out'
+                    }
+                };
+
+                Plotly.newPlot('plot', [trace], layout);
+            })
+            .catch(err => {
+                document.getElementById('loader').style.display = 'none';
+                console.error('Error:', err);
+            });
+    }
+    </script>
+</body>
+</html>
